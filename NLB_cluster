@@ -1,11 +1,10 @@
 ######################################################################################
-Powershell script to build NLB cluster
-TO DO: change 2nd nic to Heartbeat
-Fix error: Cannot bind argument to parameter 'IPAddress' because it is an empty string
-Test 3rd node
-
-
-                                                      
+#Powershell script to build NLB cluster
+#TO DO: change 2nd nic to Heartbeat
+#Fix error: Cannot bind argument to parameter 'IPAddress' because it is an empty string
+#Test 3rd node
+#Adding 2nd node only works with DNS name not IP address
+                                                     
 #######################################################################################
 
 
