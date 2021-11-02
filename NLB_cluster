@@ -1,9 +1,10 @@
 ######################################################################################
 #Powershell script to build NLB cluster
-#TO DO: change 2nd nic to Heartbeat
-#Fix error: Cannot bind argument to parameter 'IPAddress' because it is an empty string
+#TO DO: 
 #Test 3rd node
 #Adding 2nd node only works with DNS name not IP address
+#Create a version with no user interaction
+#Pass variables to script another way? File?
                                                      
 #######################################################################################
 
@@ -12,11 +13,11 @@
 
 
 # Interface cards should be named the same and have a fixed IP
-$InterfaceName = "NLB"
-$ClusterFqdn = "nconnect.atitest.local"
-$ClusterPrimaryIP = "10.139.123.79"
-$ClusterPrimaryIPSubnetMask = "255.255.255.0"
-$nodeIpAddress = "10.139.123.75"
+$InterfaceName = ""
+$ClusterFqdn = "fqdn"
+$ClusterPrimaryIP = ""
+$ClusterPrimaryIPSubnetMask = ""
+$nodeIpAddress = ""
 
 #Set ExecutionPolicy
 Write-Host "Set ExecutionPolicy" -ForegroundColor yellow
@@ -28,11 +29,12 @@ Install-WindowsFeature NLB,RSAT-NLB –IncludeManagementTools
 
 #Rename NIC
 Write-Host "Rename NLB NIC" -ForegroundColor yellow 
-Rename-NetAdapter -Name "Ethernet" -NewName $InterfaceName
+Rename-NetAdapter -Name "Ethernet1" -NewName $InterfaceName
+
 
 # Set Default Fixed IP on NLB
-Write-Host "Fixed IP on NLB" -ForegroundColor yellow 
-New-NetIPAddress -IPAddress $nodeIpAddress -InterfaceAlias $InterfaceName -AddressFamily IPv4 -PrefixLength 24
+#Write-Host "Fixed IP on NLB" -ForegroundColor yellow 
+#New-NetIPAddress -IPAddress $nodeIpAddress -InterfaceAlias $InterfaceName -AddressFamily IPv4 -PrefixLength 24
 
 
 Write-Host "Choose cluster operation mode"
@@ -55,12 +57,12 @@ New-NlbCluster -ClusterName $ClusterFqdn -InterfaceName $InterfaceName -ClusterP
 Write-Host "Removing default port rule..." -ForegroundColor yellow
 Get-NlbClusterPortRule -HostName . | Remove-NlbClusterPortRule -Force
 
-#Adding port rules 80
+#Adding port rules 50000 and 50143
 Write-Host "Added port rule for http (tcp 50000)" -ForegroundColor yellow
-Add-NlbClusterPortRule -Protocol Tcp -Mode Multiple -Affinity Single -StartPort 50000 -EndPort 50000 -InterfaceName $InterfaceName -IP $ClusterPrimaryIP| Out-Null
-#Adding port rules 443
+Add-NlbClusterPortRule -Protocol Both -Mode Multiple -Affinity None -StartPort 50000 -EndPort 50000 -InterfaceName $InterfaceName -IP $ClusterPrimaryIP| Out-Null
+
 Write-Host "Added port rule for https (tcp 50143)" -ForegroundColor yellow
-Add-NlbClusterPortRule -Protocol Tcp -Mode Multiple -Affinity Single -StartPort 50143 -EndPort 50143 -InterfaceName $InterfaceName -IP $ClusterPrimaryIP| Out-Null
+Add-NlbClusterPortRule -Protocol Both -Mode Multiple -Affinity None -StartPort 50143 -EndPort 50143 -InterfaceName $InterfaceName -IP $ClusterPrimaryIP| Out-Null
 
 
 Write-Warning "Before adding additional nodes, make sure that NLB are installed and the NLB-adapter are configured with a static IP-address on the remote node"
@@ -81,11 +83,11 @@ Install-WindowsFeature NLB,RSAT-NLB -ComputerName $Node2Fqdn –IncludeManagemen
 
 #Rename NIC
 Write-Host "Rename NLB NIC" -ForegroundColor yellow 
-invoke-command -computername $Node2Fqdn -scriptblock { Rename-NetAdapter -Name "Ethernet" -NewName "NLB" }
+invoke-command -computername $Node2Fqdn -scriptblock { Rename-NetAdapter -Name "Ethernet1" -NewName "NLB" }
 
 #Give NLB NIC an IP
-Write-Host "Placed NLB IP and changed NIC to NLB" -ForegroundColor yellow
-invoke-command -computername $Node2Fqdn -scriptblock { New-NetIPAddress -IPAddress $nodeIpAddress1 -InterfaceAlias $InterfaceName -AddressFamily IPv4 -PrefixLength 24}
+#Write-Host "Placed NLB IP and changed NIC to NLB" -ForegroundColor yellow
+#invoke-command -computername $Node2Fqdn -scriptblock { New-NetIPAddress -IPAddress $nodeIpAddress1 -InterfaceAlias $InterfaceName -AddressFamily IPv4 -PrefixLength 24}
 
 #Add Remote Node To NLB
 Write-Host "Adding cluster node $Node2Fqdn" -ForegroundColor yellow
@@ -93,5 +95,5 @@ Get-NlbCluster -HostName $env:COMPUTERNAME | Add-NlbClusterNode -NewNodeName $No
 
 $additionalnodes = Read-Host "Add additional nodes to the cluster? Y/N"
 } until ($additionalnodes -like "n") 
+Start-Process -FilePath "C:\Windows\system32\nlbmgr.exe"
 }
-
