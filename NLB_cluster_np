@@ -1,0 +1,66 @@
+######################################################################################
+#Powershell script to build NLB cluster
+#TO DO: 
+#Test 3rd node
+#Adding 2nd node only works with DNS name not IP address
+#Pass variables to script another way? File?
+                                                     
+#######################################################################################
+
+
+
+
+
+# Interface cards should be named the same and have a fixed IP
+$InterfaceName = ""
+$ClusterFqdn = "fqdn"
+$ClusterPrimaryIP = ""
+$ClusterPrimaryIPSubnetMask = ""
+$nodeIpAddress = ""
+$Node2Fqdn = ""
+##$additionalnodes = ""
+
+#Set ExecutionPolicy
+Set-ExecutionPolicy -scope LocalMachine RemoteSigned –force
+
+#Add-WindowsFeature
+Install-WindowsFeature NLB,RSAT-NLB –IncludeManagementTools 
+
+#Rename NIC 
+Rename-NetAdapter -Name "Ethernet1" -NewName $InterfaceName
+
+# Set Default Fixed IP on NLB
+#Write-Host "Fixed IP on NLB" -ForegroundColor yellow 
+#New-NetIPAddress -IPAddress $nodeIpAddress -InterfaceAlias $InterfaceName -AddressFamily IPv4 -PrefixLength 24
+
+#Creating new NLB Cluster
+New-NlbCluster -ClusterName $ClusterFqdn -InterfaceName $InterfaceName -ClusterPrimaryIP $ClusterPrimaryIP -SubnetMask $ClusterPrimaryIPSubnetMask -OperationMode "IGMP Multicast"
+
+#Removing default port rule for the NLB Cluster
+Get-NlbClusterPortRule -HostName . | Remove-NlbClusterPortRule -Force
+
+#Adding port rules 50000 and 50143
+Add-NlbClusterPortRule -Protocol Both -Mode Multiple -Affinity None -StartPort 50000 -EndPort 50000 -InterfaceName $InterfaceName -IP $ClusterPrimaryIP| Out-Null
+
+Add-NlbClusterPortRule -Protocol Both -Mode Multiple -Affinity None -StartPort 50143 -EndPort 50143 -InterfaceName $InterfaceName -IP $ClusterPrimaryIP| Out-Null
+
+#Adding additional cluster nodes based on user input
+$Node2Fqdn = Read-Host "Enter the IP of extra NLB node"
+
+#Add host to trusted hosts list
+#Set-Item WSMan:\localhost\Client\TrustedHosts -Value 10.139.123.76 -Force
+
+#Add-WindowsFeature
+Install-WindowsFeature NLB,RSAT-NLB -ComputerName $Node2Fqdn –IncludeManagementTools 
+
+#Rename NIC
+invoke-command -computername $Node2Fqdn -scriptblock { Rename-NetAdapter -Name "Ethernet1" -NewName "NLB" }
+
+#Give NLB NIC an IP
+#Write-Host "Placed NLB IP and changed NIC to NLB" -ForegroundColor yellow
+#invoke-command -computername $Node2Fqdn -scriptblock { New-NetIPAddress -IPAddress $nodeIpAddress1 -InterfaceAlias $InterfaceName -AddressFamily IPv4 ##-PrefixLength 24}
+
+#Add Remote Node To NLB
+Get-NlbCluster -HostName $env:COMPUTERNAME | Add-NlbClusterNode -NewNodeName $Node2Fqdn -NewNodeInterface $InterfaceName -Verbose
+
+Start-Process -FilePath "C:\Windows\system32\nlbmgr.exe"
