@@ -1,6 +1,6 @@
 # Powershell
 
-Powershell script to automate the building of NLB. Prequesites, NLB-adapter are configured with a static IP-address on the remote nodes. Specific NIC configuartions like do not add to DNS will have to be done manually.
+Powershell script to automate the building of NLB. Prequesites, NLB-adapter are configured with a static IP-address on the remote nodes. Use DNS name to add second node. Specific NIC configuartions like do not add to DNS will have to be done manually.
 Fill out feilds below in script: 
 
 $InterfaceName = "NLB"<br>
