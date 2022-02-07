@@ -13,7 +13,7 @@
 
 
 # Interface cards should be named the same and have a fixed IP
-$InterfaceName = ""
+$InterfaceName = "HeartBeat"
 $ClusterFqdn = "fqdn"
 $ClusterPrimaryIP = ""
 $ClusterPrimaryIPSubnetMask = ""
@@ -28,9 +28,12 @@ Write-Host "Add-WindowsFeature NLB" -ForegroundColor yellow
 Install-WindowsFeature NLB,RSAT-NLB –IncludeManagementTools 
 
 #Rename NIC
-Write-Host "Rename NLB NIC" -ForegroundColor yellow 
-Rename-NetAdapter -Name "Ethernet1" -NewName $InterfaceName
+Write-Host "Rename HeartBeat NIC" -ForegroundColor yellow 
+Rename-NetAdapter -Name "Ethernet0" -NewName HeartBeat
 
+#Rename NIC
+Write-Host "Rename NLB NIC" -ForegroundColor yellow 
+Rename-NetAdapter -Name "Ethernet1" -NewName NLB
 
 # Set Default Fixed IP on NLB
 #Write-Host "Fixed IP on NLB" -ForegroundColor yellow 
@@ -65,7 +68,7 @@ Write-Host "Added port rule for https (tcp 50143)" -ForegroundColor yellow
 Add-NlbClusterPortRule -Protocol Both -Mode Multiple -Affinity None -StartPort 50143 -EndPort 50143 -InterfaceName $InterfaceName -IP $ClusterPrimaryIP| Out-Null
 
 
-Write-Warning "Before adding additional nodes, make sure that NLB are installed and the NLB-adapter are configured with a static IP-address on the remote node"
+Write-Warning "2nd NODE WILL NEED TO BE ADDED VIA DNS ADDRES .. Before adding additional nodes, make sure that NLB is installed and the NLB-adapter are configured with a static IP-address on the remote node"
 $additionalnodes = Read-Host "Add additional nodes to the cluster? Y/N"
 if ($additionalnodes -like "y"){
 do {
@@ -75,13 +78,17 @@ Write-Host "Give Second NLB host" -ForegroundColor yellow
 $Node2Fqdn = Read-Host "Enter the IP of extra NLB node"
 
 #Add host to trusted hosts list
-#Set-Item WSMan:\localhost\Client\TrustedHosts -Value 10.139.123.76 -Force
+#Set-Item WSMan:\localhost\Client\TrustedHosts -Value ip.x.x.x -Force
 
 #Add-WindowsFeature
 Write-Host "Add-WindowsFeature NLB" -ForegroundColor yellow
 Install-WindowsFeature NLB,RSAT-NLB -ComputerName $Node2Fqdn –IncludeManagementTools 
 
-#Rename NIC
+#Rename 1st NIC
+Write-Host "Rename HeartBeat NIC" -ForegroundColor yellow 
+invoke-command -computername $Node2Fqdn -scriptblock { Rename-NetAdapter -Name "Ethernet0" -NewName "HeartBeat" }
+
+#Rename 2nd NIC
 Write-Host "Rename NLB NIC" -ForegroundColor yellow 
 invoke-command -computername $Node2Fqdn -scriptblock { Rename-NetAdapter -Name "Ethernet1" -NewName "NLB" }
 
