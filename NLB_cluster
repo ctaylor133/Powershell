@@ -13,7 +13,7 @@
 
 
 # Interface cards should be named the same and have a fixed IP
-$InterfaceName = "HeartBeat"
+$InterfaceName = "Oasis360"
 $ClusterFqdn = "fqdn"
 $ClusterPrimaryIP = ""
 $ClusterPrimaryIPSubnetMask = ""
@@ -29,7 +29,7 @@ Install-WindowsFeature NLB,RSAT-NLB –IncludeManagementTools
 
 #Rename NIC
 Write-Host "Rename HeartBeat NIC" -ForegroundColor yellow 
-Rename-NetAdapter -Name "Ethernet0" -NewName HeartBeat
+Rename-NetAdapter -Name "Ethernet0" -NewName Oasis360
 
 #Rename NIC
 Write-Host "Rename NLB NIC" -ForegroundColor yellow 
@@ -85,8 +85,8 @@ Write-Host "Add-WindowsFeature NLB" -ForegroundColor yellow
 Install-WindowsFeature NLB,RSAT-NLB -ComputerName $Node2Fqdn –IncludeManagementTools 
 
 #Rename 1st NIC
-Write-Host "Rename HeartBeat NIC" -ForegroundColor yellow 
-invoke-command -computername $Node2Fqdn -scriptblock { Rename-NetAdapter -Name "Ethernet0" -NewName "HeartBeat" }
+Write-Host "Rename Oasis360 NIC" -ForegroundColor yellow 
+invoke-command -computername $Node2Fqdn -scriptblock { Rename-NetAdapter -Name "Ethernet0" -NewName "Oasis360" }
 
 #Rename 2nd NIC
 Write-Host "Rename NLB NIC" -ForegroundColor yellow 
