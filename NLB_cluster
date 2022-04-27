@@ -13,11 +13,13 @@
 
 
 # Interface cards should be named the same and have a fixed IP
-$InterfaceName = "Oasis360"
-$ClusterFqdn = "fqdn"
-$ClusterPrimaryIP = ""
-$ClusterPrimaryIPSubnetMask = ""
-$nodeIpAddress = ""
+#$InterfaceName = "Oasis360"
+$InterfaceName1 = Get-NetAdapter -InterfaceDescription "* Ethernet Adapter"
+$InterfaceName2 = Get-NetAdapter -InterfaceDescription "* Ethernet Adapter #2"
+$ClusterFqdn = "oanconnect.atitest.local"
+$ClusterPrimaryIP = "10.139.123.39"
+$ClusterPrimaryIPSubnetMask = "255.255.255.0"
+$nodeIpAddress = "10.139.123.88"
 
 #Set ExecutionPolicy
 Write-Host "Set ExecutionPolicy" -ForegroundColor yellow
@@ -27,13 +29,16 @@ Set-ExecutionPolicy -scope LocalMachine RemoteSigned –force
 Write-Host "Add-WindowsFeature NLB" -ForegroundColor yellow
 Install-WindowsFeature NLB,RSAT-NLB –IncludeManagementTools 
 
+#Remove Second NIC's DNS registration
+$InterfaceName2 | Set-DNSClient –RegisterThisConnectionsAddress $False
+
 #Rename NIC
-Write-Host "Rename HeartBeat NIC" -ForegroundColor yellow 
-Rename-NetAdapter -Name "Ethernet0" -NewName Oasis360
+Write-Host "Rename Oasis NIC" -ForegroundColor yellow 
+$InterfaceName1 | Rename-NetAdapter -NewName Oasis360
 
 #Rename NIC
 Write-Host "Rename NLB NIC" -ForegroundColor yellow 
-Rename-NetAdapter -Name "Ethernet1" -NewName NLB
+$InterfaceName2 | Rename-NetAdapter -NewName NLB
 
 # Set Default Fixed IP on NLB
 #Write-Host "Fixed IP on NLB" -ForegroundColor yellow 
@@ -54,7 +59,7 @@ default {Write-Warning "Invalid option, choose '1', '2' or '3'";return}
 
 #Creating new NLB Cluster
 Write-Host "Creating NLB Cluster..." -ForegroundColor yellow
-New-NlbCluster -ClusterName $ClusterFqdn -InterfaceName $InterfaceName -ClusterPrimaryIP $ClusterPrimaryIP -SubnetMask $ClusterPrimaryIPSubnetMask -OperationMode $OperationMode
+New-NlbCluster -ClusterName $ClusterFqdn -InterfaceName "NLB" -ClusterPrimaryIP $ClusterPrimaryIP -SubnetMask $ClusterPrimaryIPSubnetMask -OperationMode $OperationMode
 
 #Removing default port rule for the NLB Cluster
 Write-Host "Removing default port rule..." -ForegroundColor yellow
@@ -62,10 +67,10 @@ Get-NlbClusterPortRule -HostName . | Remove-NlbClusterPortRule -Force
 
 #Adding port rules 50000 and 50143
 Write-Host "Added port rule for http (tcp 50000)" -ForegroundColor yellow
-Add-NlbClusterPortRule -Protocol Both -Mode Multiple -Affinity None -StartPort 50000 -EndPort 50000 -InterfaceName $InterfaceName -IP $ClusterPrimaryIP| Out-Null
+Add-NlbClusterPortRule -Protocol Both -Mode Multiple -Affinity None -StartPort 50000 -EndPort 50000 -InterfaceName "NLB" -IP $ClusterPrimaryIP| Out-Null
 
 Write-Host "Added port rule for https (tcp 50143)" -ForegroundColor yellow
-Add-NlbClusterPortRule -Protocol Both -Mode Multiple -Affinity None -StartPort 50143 -EndPort 50143 -InterfaceName $InterfaceName -IP $ClusterPrimaryIP| Out-Null
+Add-NlbClusterPortRule -Protocol Both -Mode Multiple -Affinity None -StartPort 50143 -EndPort 50143 -InterfaceName "NLB" -IP $ClusterPrimaryIP| Out-Null
 
 
 Write-Warning "2nd NODE WILL NEED TO BE ADDED VIA DNS ADDRES .. Before adding additional nodes, make sure that NLB is installed and the NLB-adapter are configured with a static IP-address on the remote node"
@@ -84,13 +89,16 @@ $Node2Fqdn = Read-Host "Enter the IP of extra NLB node"
 Write-Host "Add-WindowsFeature NLB" -ForegroundColor yellow
 Install-WindowsFeature NLB,RSAT-NLB -ComputerName $Node2Fqdn –IncludeManagementTools 
 
+#Remove Second NIC's DNS registration
+Invoke-Command -computername $Node2Fqdn -scriptblock {  Get-NetAdapter -InterfaceDescription "* Ethernet Adapter #2" | Set-DNSClient –RegisterThisConnectionsAddress $False }
+
 #Rename 1st NIC
 Write-Host "Rename Oasis360 NIC" -ForegroundColor yellow 
-invoke-command -computername $Node2Fqdn -scriptblock { Rename-NetAdapter -Name "Ethernet0" -NewName "Oasis360" }
+invoke-command -computername $Node2Fqdn -scriptblock { Get-NetAdapter -InterfaceDescription "* Ethernet Adapter" | Rename-NetAdapter -NewName "Oasis360" }
 
 #Rename 2nd NIC
 Write-Host "Rename NLB NIC" -ForegroundColor yellow 
-invoke-command -computername $Node2Fqdn -scriptblock { Rename-NetAdapter -Name "Ethernet1" -NewName "NLB" }
+invoke-command -computername $Node2Fqdn -scriptblock { Get-NetAdapter -InterfaceDescription "* Ethernet Adapter #2" | Rename-NetAdapter -NewName "NLB" }
 
 #Give NLB NIC an IP
 #Write-Host "Placed NLB IP and changed NIC to NLB" -ForegroundColor yellow
@@ -98,9 +106,15 @@ invoke-command -computername $Node2Fqdn -scriptblock { Rename-NetAdapter -Name "
 
 #Add Remote Node To NLB
 Write-Host "Adding cluster node $Node2Fqdn" -ForegroundColor yellow
-Get-NlbCluster -HostName $env:COMPUTERNAME | Add-NlbClusterNode -NewNodeName $Node2Fqdn -NewNodeInterface $InterfaceName -Verbose
+Get-NlbCluster -HostName $env:COMPUTERNAME | Add-NlbClusterNode -NewNodeName $Node2Fqdn -NewNodeInterface "NLB" -Verbose
+
+Get-DnsClient
+
+Invoke-Command -ComputerName @additionalnodes -ScriptBlock { Get-DnsClient }
 
 $additionalnodes = Read-Host "Add additional nodes to the cluster? Y/N"
 } until ($additionalnodes -like "n") 
 Start-Process -FilePath "C:\Windows\system32\nlbmgr.exe"
+Get-NlbCluster
 }
+
