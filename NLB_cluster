@@ -16,10 +16,10 @@
 #$InterfaceName = "Oasis360"
 $InterfaceName1 = Get-NetAdapter -InterfaceDescription "* Ethernet Adapter"
 $InterfaceName2 = Get-NetAdapter -InterfaceDescription "* Ethernet Adapter #2"
-$ClusterFqdn = "oanconnect.atitest.local"
-$ClusterPrimaryIP = "10.139.123.39"
+$ClusterFqdn = ""
+$ClusterPrimaryIP = ""
 $ClusterPrimaryIPSubnetMask = "255.255.255.0"
-$nodeIpAddress = "10.139.123.88"
+$nodeIpAddress = ""
 
 #Set ExecutionPolicy
 Write-Host "Set ExecutionPolicy" -ForegroundColor yellow
