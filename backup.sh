@@ -14,7 +14,7 @@ ls -l /mysqldata/backups >> /tmp/backup-$TODAY.log
 
 echo "Mounting windows backup drive" >> /tmp/backup-$TODAY.log
 
-mount -t cifs -o username=SVC_ASL_BKUP,password=$WINPASSWORD,domain=fix.me //fqdn_of_backup_srv/directory /mnt/tape
+mount -t cifs -o username=username,password=$WINPASSWORD,domain=fix.me //fqdn_of_backup_srv/directory /mnt/tape
 echo "Copying onelink backup to windows tape drive" >> /tmp/backup-$TODAY.log
 
 sleep 2
