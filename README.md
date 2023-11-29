@@ -11,4 +11,4 @@ $nodeIpAddress = "<node IP>"<br>
   
 Follow prompts for 2nd node.<br>
 
- Various Troublshooting PowerShell scripts
+ Various Troubleshooting PowerShell scripts
