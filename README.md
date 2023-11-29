@@ -9,4 +9,6 @@ $ClusterPrimaryIP = "<IP>"<br>
 $ClusterPrimaryIPSubnetMask = "255.255.255.0"<br>
 $nodeIpAddress = "<node IP>"<br>
   
- Follow prompts for 2nd node.<br>
+Follow prompts for 2nd node.<br>
+
+ Various Troublshooting PowerShell scripts
