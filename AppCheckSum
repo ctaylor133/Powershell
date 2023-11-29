@@ -1,0 +1,53 @@
+#!/bin/bash
+MYIP="$(/sbin/ifconfig eth0 | grep 'inet ' | awk '{print $2}' | cut -d ':' -f2)"
+EMAIL1=email1.com
+EMAIL2=email2.com
+
+# Function to check if a file's SHA sum matches the given SHA
+function check_sha_sum() {
+    local file="$1"
+    local expected_sha="$2"
+    local actual_sha=$(sha1sum "$file" | awk '{print $1}')
+
+    if [[ "$actual_sha" == "$expected_sha" ]]; then
+        echo "Onelink Application checksum of $file for $(hostname)@$MYIP has PASSED" | tee /dev/tty | /usr/bin/mail -s "Onelink Application checksum of $file for $(hostname)@$MYIP has PASSED" $EMAIL1 $EMAIL2
+    else
+	/etc/init.d/onelink-appserver stop
+        echo "Onelink Application checksum of $file DID NOT PASS for $(hostname)@$MYIP (Expected: $expected_sha, Actual: $actual_sha)" | tee /dev/tty | /usr/bin/mail -s "Onelink Application checksum of $file DID NOT PASS for $(hostname)@$MYIP" $EMAIL1 $EMAIL2
+    fi
+}
+
+# Check if the correct number of arguments is provided
+if [[ $# -ne 1 ]]; then
+    echo "Usage: $0 <file_with_parameters>"
+    exit 1
+fi
+
+parameters_file="$1"
+
+# Check if the parameters file exists
+if [[ ! -f "$parameters_file" ]]; then
+    echo "Error: Parameters file '$parameters_file' not found."
+    exit 1
+fi
+
+# Read the parameters file line by line
+while IFS=' ' read -r first_param second_param || [[ -n "$first_param" && -n "$second_param" ]]; do
+
+    # Check if both parameters are empty (i.e., an empty line)
+    if [[ -z "$first_param" && -z "$second_param" ]]; then
+        continue
+    fi
+
+    # Check if the file mentioned in the second parameter exists
+    if [[ ! -f "$second_param" ]]; then
+        echo "Warning: File '$second_param' mentioned in the parameters file does not exist."
+        continue
+    fi
+
+    # Check the SHA sum of the file
+    check_sha_sum "$second_param" "$first_param"
+done < "$parameters_file"
+
+echo "SHA sum check completed."
+
