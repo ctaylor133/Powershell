@@ -19,5 +19,5 @@ $string = $dcname -replace $pattern, ''
 
 
 Invoke-Command -ComputerName $string -ScriptBlock {Get-DhcpServerv4Scope -Computername $using:string} | Select @{Expression={$_.PSComputerName};Label="Server Name"}, @{Expression={$_.SubnetMask};Label="SubnetMask"}, @{Expression={$_.ScopeID};Label="ScopeID"}, @{Expression={$_.LeaseDuration};Label="Lease Time"} | ConvertTo-Html -Head $Header | Out-File -FilePath $ENV:UserProfile\Desktop\dhcpinfo.html
-Invoke-Command -ComputerName $string -ScriptBlock {Get-DhcpServerv4OptionValue -Computername $using:string -ScopeID "10.139.123.0"} | Select @{Expression={$_.Name};Label="DNS Name"}, @{Expression={$_.Value};Label="DNS Servers"} | ConvertTo-Html -Head $Header | Out-File -Append -FilePath $ENV:UserProfile\Desktop\dhcpinfo.html
+Invoke-Command -ComputerName $string -ScriptBlock {Get-DhcpServerv4OptionValue -Computername $using:string -ScopeID "ip_address"} | Select @{Expression={$_.Name};Label="DNS Name"}, @{Expression={$_.Value};Label="DNS Servers"} | ConvertTo-Html -Head $Header | Out-File -Append -FilePath $ENV:UserProfile\Desktop\dhcpinfo.html
 Invoke-Command -ComputerName $string {[Net.ServicePointManager]::SecurityProtocol} | select @{Expression={$_.PSComputername};Label="Server"}, @{Expression={$_.value};Label="TLS"} | ConvertTo-Html -Head $Header | Out-File -Append -FilePath $ENV:UserProfile\Desktop\dhcpinfo.html
