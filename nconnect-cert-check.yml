@@ -1,0 +1,12 @@
+---
+- name: Check SSL certificate expiration date on IIS server
+  hosts: nconnect
+  gather_facts: no
+  tasks:
+    - name: Get SSL certificate expiration date
+      win_command: 'powershell -Command "Get-ChildItem Cert:\LocalMachine\My | Where-Object {$_.Issuer -notlike ''*trusted*''} | Select-Object -Property Subject, NotAfter"'
+      register: cert_info
+
+    - name: Display certificate information
+      debug:
+        msg: "{{ cert_info.stdout }}"
