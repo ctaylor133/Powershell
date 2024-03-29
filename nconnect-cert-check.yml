@@ -12,4 +12,4 @@
 
     - name: Display certificate information
       debug:
-        msg: "{{ cert_info.stdout }}"
+        msg: "Subject: {{ cert_info.stdout_lines[2].split(' ', 1)[1] | trim }}, NotAfter: {{ '\033[1m' }}{{ cert_info.stdout_lines[3] }}{{ '\033[0m' }}"
