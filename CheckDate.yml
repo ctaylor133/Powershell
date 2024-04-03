@@ -1,0 +1,12 @@
+- name: gather info on concentrators
+  hosts: all
+  gather_facts: true
+  tasks:
+
+
+    - name: check time with timedatectl command
+      shell: timedatectl | grep -A4 "Local time"
+      register: time
+
+    - debug:
+       var: time.stdout
