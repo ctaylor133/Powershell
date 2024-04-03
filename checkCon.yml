@@ -1,0 +1,11 @@
+- name: gather info on concentrators
+  hosts: all
+  gather_facts: False
+  tasks:
+
+    - name: Run command to see how balanced
+      shell: /usr/bin/links -dump http://{{ inventory_hostname }}:8161/index.jsp | grep Devices
+      register: devices
+
+    - debug:
+        var: devices.stdout_lines
