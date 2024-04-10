@@ -117,7 +117,7 @@ echo "$NOBM out of $TOTAL EGMs Have no Bonusing Method defined"
 echo " "
 echo "MEGA MIC COUNT"
 echo "=============="
-MEGA=`echo "SELECT count(*) from Device where DeviceType='ICard' and ActiveDate is NOT NULL and InActiveDate is NULL and ReplacedDate is NULL and Platform LIKE '%MegaMIC%';" | $MYSQL_CMD`
+MEGA=`echo "SELECT count(*) from Device where DeviceType='ICard' and ActiveDate is NOT NULL and InActiveDate is NULL and ReplacedDate is NULL and Platform LIKE '%PAL-264%';" | $MYSQL_CMD`
 
 MEGA=`echo $MEGA | /usr/bin/cut -d' ' -f2`
 
