@@ -8,7 +8,7 @@
   remote_user: root
   vars:
     notes: Created by Ansible
-  vars_files: vsphere_uslv_vars.yml
+  #vars_files: vsphere_uslv_vars.yml
   vars_prompt:
 #       - name: vcenter_username
 #         prompt: type vcenter username
