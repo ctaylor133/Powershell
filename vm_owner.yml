@@ -14,6 +14,7 @@
 #         prompt: type vcenter username
        - name: vcenter_password
          prompt: type vcenter password
+         private: yes
 
   tasks:
 #- name: Check for required variables
