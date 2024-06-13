@@ -1,7 +1,6 @@
 
 ---
 #
-# Create a new VM
 - hosts: uslv
   connection: local
   gather_facts: True
