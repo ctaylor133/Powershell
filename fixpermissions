@@ -1,0 +1,12 @@
+---
+- name: Check SSL certificate expiration date on IIS server
+  hosts: lvl4
+  gather_facts: no
+  vars:
+    ansible_python_interpreter: /usr/bin/python2.7
+
+  tasks:
+    name: run the fix permission script
+    ansible.builtin.shell: fixpermissions.sh
+    args:
+      chdir: /etc
