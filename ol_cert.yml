@@ -1,6 +1,6 @@
 ---
 - name: Create onelink SSL cert
-  hosts: ansible
+  hosts: all
   gather_facts: False
   vars:
  #   trust: "yes"
