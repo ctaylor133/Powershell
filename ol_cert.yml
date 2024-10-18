@@ -24,7 +24,7 @@
   tasks:
     - name: Prompt for server name and password
       ansible.builtin.template:
-        src: "/root/autocert/templates/create-server-cert.sh"
+        src: "/root/semaphore/playbooks/templates/create-server-cert.sh"
         dest: /root/autocert
         mode: '0755'
 
