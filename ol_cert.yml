@@ -27,6 +27,7 @@
         src: "/root/semaphore/playbooks/templates/create-server-cert.sh"
         dest: /root/autocert
         mode: '0755'
+        remote_src: yes
 
     - name: Delete files in output directory before continuing
       ansible.builtin.find:
